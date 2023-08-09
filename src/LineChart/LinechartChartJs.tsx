@@ -70,10 +70,38 @@ export const LineChartChartJs: React.FC<LineChartChartJsProps> = ({
     endDate, // Initialize with the end date from props
   ]);
 
+  // Function to filter the data based on the selected date range
+  const filterDataByDateRange = (startDate: Date, endDate: Date) => {
+    return data.filter((item) => {
+      const itemDate = new Date(item.name); // Assuming 'name' is the date field
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+  };
+
   const handleSliderChange = (value: [Date, Date]) => {
     setSliderValue(value);
     // Adjust the date range or zoom level based on sliderValue
-    // Update chart data accordingly
+    const [newStartDate, newEndDate] = value;
+    const filteredData = filterDataByDateRange(newStartDate, newEndDate);
+
+    // Update the chart data with the filtered data
+    setChartData({
+      labels: filteredData.map((item) => item.name),
+      datasets: [
+        {
+          label: "Temperature",
+          data: filteredData.map((item) => item.temperature),
+          borderColor: "#E85319",
+          backgroundColor: "#E85319",
+        },
+        {
+          label: "Crack Movement",
+          data: filteredData.map((item) => item.crackmovement),
+          borderColor: "#0f5a96",
+          backgroundColor: "#0f5a96",
+        },
+      ],
+    });
   };
 
   const [chartData, setChartData] = useState({
