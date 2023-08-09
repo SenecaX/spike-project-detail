@@ -27,9 +27,9 @@ function App() {
       }}
     >
       <div style={{ marginBottom: 30 }}>
-        <LineChart data={Object.values(transformedData)} />
+        {/* <LineChart data={Object.values(transformedData)} /> */}
       </div>
-      <LineChartD3 data={Object.values(transformedData)} />
+      {/* <LineChartD3 data={Object.values(transformedData)} /> */}
       <LineChartChartJs data={Object.values(transformedData)} />
     </div>
   );
