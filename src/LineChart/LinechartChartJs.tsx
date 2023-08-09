@@ -11,6 +11,8 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import zoomPlugin from "chartjs-plugin-zoom"; // Import the plugin
+import DateRangeSlider from "./DateRangeSlider";
+import { Box } from "@mui/material";
 
 ChartJS.register(
   CategoryScale,
@@ -54,9 +56,26 @@ export const options = {
 
 type LineChartChartJsProps = {
   data: { name: string; temperature: number; crackmovement: number }[];
+  startDate: Date; // New prop for start date
+  endDate: Date; // New prop for end date
 };
 
-export const LineChartChartJs: React.FC<LineChartChartJsProps> = ({ data }) => {
+export const LineChartChartJs: React.FC<LineChartChartJsProps> = ({
+  data,
+  endDate,
+  startDate,
+}) => {
+  const [sliderValue, setSliderValue] = useState<[Date, Date]>([
+    startDate, // Initialize with the start date from props
+    endDate, // Initialize with the end date from props
+  ]);
+
+  const handleSliderChange = (value: [Date, Date]) => {
+    setSliderValue(value);
+    // Adjust the date range or zoom level based on sliderValue
+    // Update chart data accordingly
+  };
+
   const [chartData, setChartData] = useState({
     labels: data.map((item) => item.name),
     datasets: [
@@ -78,8 +97,16 @@ export const LineChartChartJs: React.FC<LineChartChartJsProps> = ({ data }) => {
   });
 
   return (
-    <div style={{ width: 1400, height: 500 }}>
+    <div
+      style={{
+        width: 1400,
+        height: 500,
+      }}
+    >
       <Line options={options} data={chartData} />
+      <Box sx={{ paddingLeft: 3 }}>
+        <DateRangeSlider value={sliderValue} onChange={handleSliderChange} />
+      </Box>
     </div>
   );
 };
