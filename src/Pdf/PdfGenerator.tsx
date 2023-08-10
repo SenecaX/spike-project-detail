@@ -6,6 +6,7 @@ import Accordion1 from "../Accordion/Accordion";
 import Accordion from "../Accordion/Accordion";
 import MultiActionAreaCard from "../Card/Card";
 import { Box, Typography } from "@mui/material";
+import Modal from "@mui/material/Modal";
 
 const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
   // Extracting the first and last dates from the JSON data
@@ -70,6 +71,29 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
     }
   };
 
+  const [selection, setSelection] = useState({
+    typography: false,
+    accordion: false,
+    lineChart: false,
+    card: false,
+    // Add other elements as needed
+  });
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleCheckboxChange = (element: string, isChecked: boolean) => {
+    setSelection((prevSelection) => ({
+      ...prevSelection,
+      [element]: isChecked,
+    }));
+  };
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // TODO: Generate PDF preview based on the current selection
+    setIsFormOpen(false); // Close the modal
+  };
+
   return (
     <div>
       <Typography variant="h1" gutterBottom sx={{ padding: 10 }}>
@@ -99,6 +123,44 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
       <Box sx={{ marginTop: 5 }}>
         <MultiActionAreaCard />
       </Box>
+      <div>
+        <button onClick={() => setIsFormOpen(true)}>Create PDF</button>
+
+        <Modal open={isFormOpen} onClose={() => setIsFormOpen(false)}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              border: "2px solid #000",
+              boxShadow: 24,
+              p: 4,
+            }}
+          >
+            <Typography variant="h6">Select Elements for PDF</Typography>
+            <form onSubmit={handleFormSubmit}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selection.typography}
+                  onChange={(e) =>
+                    handleCheckboxChange("typography", e.target.checked)
+                  }
+                />
+                Include Typography
+              </label>
+              {/* Repeat for other elements */}
+              <button type="submit">Preview PDF</button>
+              <button type="button" onClick={() => setIsFormOpen(false)}>
+                Cancel
+              </button>
+            </form>
+          </Box>
+        </Modal>
+      </div>
     </div>
   );
 };
