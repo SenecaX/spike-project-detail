@@ -38,7 +38,7 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
 
   const generatePDF = () => {
     if (chartRef.current) {
-      html2canvas(chartRef.current).then((canvas) => {
+      html2canvas(pdfContentRef.current).then((canvas) => {
         const imgData = canvas.toDataURL("image/png");
         const doc = new jsPDF({
           orientation: "landscape",
@@ -90,9 +90,11 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // TODO: Generate PDF preview based on the current selection
+    generatePDF();
     setIsFormOpen(false); // Close the modal
   };
+
+  const pdfContentRef = useRef<HTMLDivElement>(null);
 
   return (
     <div>
@@ -117,7 +119,16 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
       {pdfPreview && (
         <div>
           <button onClick={downloadPDF}>Download PDF</button>
-          <iframe src={pdfPreview} width="100%" height="90%" />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100vh",
+            }}
+          >
+            <iframe src={pdfPreview} width="80%" height="80%" />
+          </div>
         </div>
       )}
       <Box sx={{ marginTop: 5 }}>
@@ -141,7 +152,7 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
             }}
           >
             <Typography variant="h6">Select Elements for PDF</Typography>
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleFormSubmit} style={{ display: "column" }}>
               <label>
                 <input
                   type="checkbox"
@@ -152,7 +163,44 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
                 />
                 Include Typography
               </label>
+
+              <br />
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selection.accordion}
+                  onChange={(e) =>
+                    handleCheckboxChange("accordion", e.target.checked)
+                  }
+                />
+                Include Accordion
+              </label>
+              <br />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selection.lineChart}
+                  onChange={(e) =>
+                    handleCheckboxChange("lineChart", e.target.checked)
+                  }
+                />
+                Include Line Chart
+              </label>
+              <br />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selection.card}
+                  onChange={(e) =>
+                    handleCheckboxChange("card", e.target.checked)
+                  }
+                />
+                Include Card
+              </label>
+
               {/* Repeat for other elements */}
+              <br />
               <button type="submit">Preview PDF</button>
               <button type="button" onClick={() => setIsFormOpen(false)}>
                 Cancel
@@ -160,6 +208,23 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
             </form>
           </Box>
         </Modal>
+      </div>
+      <div ref={pdfContentRef}>
+        {selection.typography && <Typography>Some text here</Typography>}
+        {selection.accordion && <Accordion title="Title" content="Content" />}
+        {selection.lineChart && (
+          <LineChartChartJs
+            data={Object.values(transformedData)}
+            startDate={startDate}
+            endDate={endDate}
+            minCrackMovement={minCrackMovement}
+            maxCrackMovement={maxCrackMovement}
+            minTemperature={minTemperature}
+            maxTemperature={maxTemperature}
+          />
+        )}
+        {selection.card && <MultiActionAreaCard /* props */ />}
+        {/* Add other elements as needed */}
       </div>
     </div>
   );
