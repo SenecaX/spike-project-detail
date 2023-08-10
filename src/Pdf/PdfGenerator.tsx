@@ -1,37 +1,34 @@
-import React, { useRef, useState } from "react";
-import { jsPDF } from "jspdf";
-import { LineChartChartJs } from "../LineChart/LinechartChartJs";
-import html2canvas from "html2canvas";
-import Accordion1 from "../Accordion/Accordion";
-import Accordion from "../Accordion/Accordion";
-import MultiActionAreaCard from "../Card/Card";
 import { Box, Typography } from "@mui/material";
 import Modal from "@mui/material/Modal";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import React, { useRef, useState } from "react";
+import Accordion from "../Accordion/Accordion";
+import MultiActionAreaCard from "../Card/Card";
+import { LineChartChartJs } from "../LineChart/LinechartChartJs";
+import PDFPreview from "./PDFPreview";
+import PDFSelectionForm from "./PDFSelectionForm";
+import { transformSensorData } from "./utils";
 
-const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
+interface Selection {
+  typography: boolean;
+  accordion: boolean;
+  lineChart: boolean;
+  card: boolean;
+}
+
+const PdfGenerator: React.FC<any> = ({ sensorData }) => {
   // Extracting the first and last dates from the JSON data
   const startDate = new Date(sensorData[0].time);
   const endDate = new Date(sensorData[sensorData.length - 1].time);
 
-  let minCrackMovement = Number.POSITIVE_INFINITY;
-  let maxCrackMovement = Number.NEGATIVE_INFINITY;
-  let minTemperature = Number.POSITIVE_INFINITY;
-  let maxTemperature = Number.NEGATIVE_INFINITY;
-
-  const transformedData = sensorData.reduce((acc: any, item: any) => {
-    const time = item.time;
-    if (item.field === "CRACKMOVEMENT") {
-      minCrackMovement = -30;
-      maxCrackMovement = 30;
-    }
-    if (item.field === "TEMPERATURE") {
-      minTemperature = -40;
-      maxTemperature = 40;
-    }
-    if (!acc[time]) acc[time] = { name: time };
-    acc[time][item.field.toLowerCase()] = item.value;
-    return acc;
-  }, {});
+  const {
+    transformedData,
+    minCrackMovement,
+    maxCrackMovement,
+    minTemperature,
+    maxTemperature,
+  } = transformSensorData(sensorData);
 
   const chartRef = useRef<HTMLDivElement>(null);
   const [pdfPreview, setPdfPreview] = useState<string | null>(null);
@@ -39,11 +36,11 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
   const generatePDF = () => {
     if (chartRef.current) {
       html2canvas(pdfContentRef.current).then((canvas) => {
+        console.log("pdfContentRef.current", pdfContentRef.current);
         const imgData = canvas.toDataURL("image/png");
         const doc = new jsPDF({
           orientation: "landscape",
         });
-        doc.text("Hello world!", 10, 10);
         doc.addImage(imgData, "PNG", 10, 20, 500, 150);
 
         // Add a new page
@@ -71,12 +68,11 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
     }
   };
 
-  const [selection, setSelection] = useState({
+  const [selection, setSelection] = useState<Selection>({
     typography: false,
     accordion: false,
     lineChart: false,
     card: false,
-    // Add other elements as needed
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -91,7 +87,7 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     generatePDF();
-    setIsFormOpen(false); // Close the modal
+    setIsFormOpen(false);
   };
 
   const pdfContentRef = useRef<HTMLDivElement>(null);
@@ -113,24 +109,10 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
           maxTemperature={maxTemperature}
         />
       </div>
-      <button onClick={generatePDF} style={{ marginTop: "50px" }}>
+      <button onClick={generatePDF} className="buttonMarginTop">
         Generate PDF
       </button>
-      {pdfPreview && (
-        <div>
-          <button onClick={downloadPDF}>Download PDF</button>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100vh",
-            }}
-          >
-            <iframe src={pdfPreview} width="80%" height="80%" />
-          </div>
-        </div>
-      )}
+      <PDFPreview pdfPreview={pdfPreview} downloadPDF={downloadPDF} />
       <Box sx={{ marginTop: 5 }}>
         <MultiActionAreaCard />
       </Box>
@@ -152,60 +134,14 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
             }}
           >
             <Typography variant="h6">Select Elements for PDF</Typography>
-            <form onSubmit={handleFormSubmit} style={{ display: "column" }}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selection.typography}
-                  onChange={(e) =>
-                    handleCheckboxChange("typography", e.target.checked)
-                  }
-                />
-                Include Typography
-              </label>
-
-              <br />
-
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selection.accordion}
-                  onChange={(e) =>
-                    handleCheckboxChange("accordion", e.target.checked)
-                  }
-                />
-                Include Accordion
-              </label>
-              <br />
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selection.lineChart}
-                  onChange={(e) =>
-                    handleCheckboxChange("lineChart", e.target.checked)
-                  }
-                />
-                Include Line Chart
-              </label>
-              <br />
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selection.card}
-                  onChange={(e) =>
-                    handleCheckboxChange("card", e.target.checked)
-                  }
-                />
-                Include Card
-              </label>
-
-              {/* Repeat for other elements */}
-              <br />
-              <button type="submit">Preview PDF</button>
-              <button type="button" onClick={() => setIsFormOpen(false)}>
-                Cancel
-              </button>
-            </form>
+            <button onClick={() => setIsFormOpen(true)}>Create PDF</button>
+            <PDFSelectionForm
+              isFormOpen={isFormOpen}
+              onClose={() => setIsFormOpen(false)}
+              selection={selection}
+              handleCheckboxChange={handleCheckboxChange}
+              handleFormSubmit={handleFormSubmit}
+            />
           </Box>
         </Modal>
       </div>
@@ -224,7 +160,6 @@ const PdfGenerator = ({ sensorData }: { sensorData: any }) => {
           />
         )}
         {selection.card && <MultiActionAreaCard /* props */ />}
-        {/* Add other elements as needed */}
       </div>
     </div>
   );
