@@ -24,7 +24,7 @@ const DateRangeSlider: React.FC<DateRangeSliderProps> = ({
   };
 
   const minDate = new Date("2023-08-01").getTime(); // Min date: 1st of August
-  const maxDate = new Date("2023-09-01").getTime(); // Max date: 1st of September
+  const maxDate = new Date("2024-02-01").getTime(); // Max date: 1st of September
 
   return (
     <Box sx={{ width: 1300 }}>
